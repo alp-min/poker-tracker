@@ -1,0 +1,33 @@
+{% load static %}
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Poker Bankroll Tracker{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="{% static 'pokerlog/styles.css' %}?v=6">
+  {% block extra_head %}{% endblock %}
+  <script>
+    (function() {
+      const t = localStorage.getItem('theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', t);
+    })();
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <a href="{% url 'dashboard' %}" class="topbar-brand">&#9824; Bankroll</a>
+      <nav class="topbar-nav">
+        <a href="{% url 'dashboard' %}">Dashboard</a>
+        <a href="{% url 'analytics' %}">Analytics</a>
+        <a href="{% url 'settings' %}">Settings</a>
+      </nav>
+    </div>
+    {% block content %}{% endblock %}
+  </div>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

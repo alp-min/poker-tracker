@@ -1,0 +1,88 @@
+{% extends "pokerlog/base.html" %}
+
+{% block title %}Edit Entry{% endblock %}
+
+{% block content %}
+<div class="card">
+  <h2>Edit Entry</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.played_at.id_for_label }}">Played at</label>
+        {{ form.played_at }}
+        {{ form.played_at.errors }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.format.id_for_label }}">Format</label>
+        {{ form.format }}
+        {{ form.format.errors }}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.buy_in.id_for_label }}">Buy-in</label>
+        {{ form.buy_in }}
+        {{ form.buy_in.errors }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.rake.id_for_label }}">Rake</label>
+        {{ form.rake }}
+        {{ form.rake.errors }}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.cash_out.id_for_label }}">Cash-out</label>
+        {{ form.cash_out }}
+        {{ form.cash_out.errors }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.ev_profit.id_for_label }}">EV profit</label>
+        {{ form.ev_profit }}
+        {{ form.ev_profit.errors }}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.duration_minutes.id_for_label }}">Duration (mins)</label>
+        {{ form.duration_minutes }}
+        {{ form.duration_minutes.errors }}
+      </div>
+
+      <div class="field">
+        <label for="{{ form.table_count.id_for_label }}">Tables</label>
+        {{ form.table_count }}
+        {{ form.table_count.errors }}
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="{{ form.mood.id_for_label }}">Mood</label>
+        {{ form.mood }}
+        {{ form.mood.errors }}
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="{{ form.notes.id_for_label }}">Notes</label>
+      {{ form.notes }}
+      {{ form.notes.errors }}
+    </div>
+
+    <div class="actions">
+      <a class="btn secondary" href="{% url 'dashboard' %}">Cancel</a>
+      <button class="btn" type="submit">Save changes</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

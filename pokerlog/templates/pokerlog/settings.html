@@ -1,0 +1,47 @@
+{% extends "pokerlog/base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<h1 style="text-align:center;margin-bottom:28px;">Settings</h1>
+
+<!-- Appearance -->
+<div class="card" style="max-width:520px; margin-top:8px;">
+  <h3>Appearance</h3>
+  <label style="display:block; margin-bottom:8px;">Theme</label>
+  <div class="theme-switcher">
+    <button class="theme-option" id="opt-dark"  onclick="setTheme('dark')">🌙 Dark</button>
+    <button class="theme-option" id="opt-light" onclick="setTheme('light')">☀️ Light</button>
+  </div>
+</div>
+
+<!-- Bankroll & Risk -->
+<div class="card" style="max-width:520px;">
+  <h3>Bankroll &amp; Risk</h3>
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field" style="margin-bottom:14px;">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="muted" style="margin-top:4px;">{{ field.help_text }}</div>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div style="display:flex; gap:10px; margin-top:6px;">
+      <button class="btn" type="submit">Save settings</button>
+      <a class="btn secondary" href="{% url 'dashboard' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script>
+  function setTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('theme', t);
+    document.getElementById('opt-dark').classList.toggle('active', t === 'dark');
+    document.getElementById('opt-light').classList.toggle('active', t === 'light');
+  }
+  // Set active state on load
+  const current = localStorage.getItem('theme') || 'dark';
+  document.getElementById('opt-' + current).classList.add('active');
+</script>
+{% endblock %}
