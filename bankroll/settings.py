@@ -25,7 +25,8 @@ SECRET_KEY = 'django-insecure-k=+0bci((c%d%0nfen*&1pz$sk!-9)wzraw&!=fbq1@nbf9n!_
 import os
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['*']
+'''ALLOWED_HOSTS = ['*']'''
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "").split(",") if os.getenv("ALLOWED_HOSTS") else []
 
 
 # Application definition
