@@ -128,3 +128,5 @@ DATABASES = {
         conn_max_age=600
     )
 }
+
+CSRF_TRUSTED_ORIGINS = ['https://poker-tracker-production-e5c3.up.railway.app']
