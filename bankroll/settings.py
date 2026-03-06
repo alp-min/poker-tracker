@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-k=+0bci((c%d%0nfen*&1pz$sk!-9)wzraw&!=fbq1@nbf9n!_'
 
 import os
-DEBUG = os.environ.get('DEBUG', 'False') == 'True'
+DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"  # default ON locally
 ALLOWED_HOSTS = ['*']
 
 
@@ -116,10 +116,13 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = "/static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
-STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+if DEBUG:
+    STATICFILES_STORAGE = "django.contrib.staticfiles.storage.StaticFilesStorage"
+else:
+    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 import dj_database_url
 DATABASES = {
