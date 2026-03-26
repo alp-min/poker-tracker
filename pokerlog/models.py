@@ -1,17 +1,14 @@
 from django.db import models
 from django.contrib.auth.models import User
-
-
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from django.contrib.auth.models import User
+
 
 class Profile(models.Model):
+    CURRENCY_CHOICES = [("GBP", "£ GBP"), ("USD", "$ USD")]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-
     starting_bankroll = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-
-    # risk settings
     max_buyin_pct = models.DecimalField(
         max_digits=5, decimal_places=2, default=2.00,
         help_text="Max buy-in as % of bankroll (e.g. 2.00 = 2%)"
@@ -20,15 +17,19 @@ class Profile(models.Model):
         max_digits=6, decimal_places=2, default=5.00,
         help_text="Stop-loss in buy-ins per day/session block"
     )
+    default_currency = models.CharField(
+        max_length=3, choices=CURRENCY_CHOICES, default="GBP",
+        help_text="Default currency for new sessions"
+    )
 
     def __str__(self):
         return f"{self.user.username} profile"
+
 
 @receiver(post_save, sender=User)
 def create_profile(sender, instance, created, **kwargs):
     if created:
         Profile.objects.create(user=instance)
-
 
 
 class Entry(models.Model):
@@ -37,31 +38,27 @@ class Entry(models.Model):
         ("SNG", "SNG"),
         ("CASH", "Cash"),
     ]
+    CURRENCY_CHOICES = [("GBP", "£ GBP"), ("USD", "$ USD")]
 
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    played_at = models.DateTimeField()
+    user       = models.ForeignKey(User, on_delete=models.CASCADE)
+    played_at  = models.DateTimeField()
+    format     = models.CharField(max_length=10, choices=FORMAT_CHOICES, default="MTT")
+    currency   = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="GBP")
 
-    format = models.CharField(max_length=10, choices=FORMAT_CHOICES, default="MTT")
-
-    buy_in = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    rake = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    buy_in   = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    rake     = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     cash_out = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     ev_profit = models.DecimalField(
-        max_digits=10,
-        decimal_places=2,
-        null=True,
-        blank=True,
+        max_digits=10, decimal_places=2, null=True, blank=True,
         help_text="Expected profit for this session"
     )
 
     duration_minutes = models.PositiveIntegerField(null=True, blank=True)
-    table_count = models.PositiveIntegerField(null=True, blank=True)
-
-    mood = models.IntegerField(null=True, blank=True)  # 1-10 (tilt indicator)
-    notes = models.TextField(blank=True, default="")
-
-    created_at = models.DateTimeField(auto_now_add=True)
+    table_count      = models.PositiveIntegerField(null=True, blank=True)
+    mood             = models.IntegerField(null=True, blank=True)
+    notes            = models.TextField(blank=True, default="")
+    created_at       = models.DateTimeField(auto_now_add=True)
 
     @property
     def total_cost(self):

@@ -28,8 +28,8 @@
       <div class="big">£{{ total_cash_out }}</div>
     </div>
     <div class="item">
-      <div class="muted">Rake paid</div>
-      <div class="big">£{{ total_rake }}</div>
+      <div class="muted">USD/GBP rate</div>
+      <div class="big" style="font-size:0.95rem;">{{ fx_rate }}</div>
     </div>
   </div>
 </div>
@@ -181,12 +181,12 @@
     </div>
     <div class="row">
       <div class="field">
-        <label for="{{ form.buy_in.id_for_label }}">Buy-in</label>
-        {{ form.buy_in }}{{ form.buy_in.errors }}
+        <label for="{{ form.currency.id_for_label }}">Currency</label>
+        {{ form.currency }}{{ form.currency.errors }}
       </div>
       <div class="field">
-        <label for="{{ form.rake.id_for_label }}">Rake</label>
-        {{ form.rake }}{{ form.rake.errors }}
+        <label for="{{ form.buy_in.id_for_label }}">Buy-in</label>
+        {{ form.buy_in }}{{ form.buy_in.errors }}
       </div>
     </div>
     <div class="row">

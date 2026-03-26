@@ -1,7 +1,6 @@
 from django import forms
-from .models import Entry
+from .models import Entry, Profile
 from django.utils import timezone
-from .models import Profile
 
 
 class EntryForm(forms.ModelForm):
@@ -10,13 +9,14 @@ class EntryForm(forms.ModelForm):
         if not self.initial.get("played_at"):
             dt = timezone.localtime(timezone.now())
             self.initial["played_at"] = dt.strftime("%Y-%m-%dT%H:%M")
+
     class Meta:
-        model = Entry
+        model  = Entry
         fields = [
             "played_at",
             "format",
+            "currency",
             "buy_in",
-            "rake",
             "cash_out",
             "ev_profit",
             "duration_minutes",
@@ -24,14 +24,17 @@ class EntryForm(forms.ModelForm):
             "mood",
             "notes",
         ]
+        # rake is intentionally excluded from the form going forward.
+        # existing entries retain their rake value in profit calculations.
         widgets = {
-            # nice datetime picker in modern browsers
             "played_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
-            "notes": forms.Textarea(attrs={"rows": 3}),
-            "mood": forms.Select(choices=[(i, i) for i in range(1, 11)]),
+            "notes":     forms.Textarea(attrs={"rows": 3}),
+            "mood":      forms.Select(choices=[(i, i) for i in range(1, 11)]),
+            "currency":  forms.Select(attrs={"class": "currency-select"}),
         }
+
 
 class ProfileForm(forms.ModelForm):
     class Meta:
-        model = Profile
-        fields = ["starting_bankroll", "max_buyin_pct", "stop_loss_buyins"]
+        model  = Profile
+        fields = ["starting_bankroll", "max_buyin_pct", "stop_loss_buyins", "default_currency"]
