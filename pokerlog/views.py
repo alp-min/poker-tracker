@@ -179,11 +179,16 @@ def dashboard(request):
                     "played_at": e.played_at, "rule": "Long session after loss",
                     "detail": f"Prev {prev_duration}m → now {duration}m"
                 })
-            if previous.mood is not None and e.mood is not None and e.mood <= previous.mood - 3:
-                warnings.append({
-                    "played_at": e.played_at, "rule": "Mood drop",
-                    "detail": f"{previous.mood} → {e.mood}"
-                })
+            # Rule C: mood drop (Calm/Neutral → Tilted)
+            if previous.mood is not None and e.mood is not None:
+                prev_cat = 2 if previous.mood >= 7 else (1 if previous.mood >= 4 else 0)
+                curr_cat = 2 if e.mood >= 7 else (1 if e.mood >= 4 else 0)
+                if curr_cat < prev_cat:
+                    mood_names = {0: "Tilted", 1: "Neutral", 2: "Calm"}
+                    warnings.append({
+                        "played_at": e.played_at, "rule": "Mood drop",
+                        "detail": f"{mood_names[prev_cat]} → {mood_names[curr_cat]}"
+                    })
         previous = e
 
     # Keep only 5 most recent tilt warnings
@@ -451,19 +456,24 @@ def analytics(request):
             mood_buckets[int(e.mood)]["profits"].append(p)
             mood_buckets[int(e.mood)]["count"] += 1
 
-    mood_data = [{"mood": m, "avg_profit": round(sum(b["profits"]) / len(b["profits"]), 2),
+    def mood_label(m):
+        if m <= 3:   return "Tilted"
+        elif m <= 6: return "Neutral"
+        else:        return "Calm"
+
+    mood_data = [{"mood": mood_label(m), "avg_profit": round(sum(b["profits"]) / len(b["profits"]), 2),
                   "sessions": b["count"]}
                  for m, b in sorted(mood_buckets.items())]
     mood_labels        = [d["mood"] for d in mood_data]
     mood_profits_chart = [d["avg_profit"] for d in mood_data]
 
-    mood_groups = {"Low (1-4)": [], "Mid (5-7)": [], "High (8-10)": []}
+    mood_groups = {"Tilted": [], "Neutral": [], "Calm": []}
     for e, p in zip(entries, profits):
         if e.mood is not None:
             m = int(e.mood)
-            if m <= 4:   mood_groups["Low (1-4)"].append(p)
-            elif m <= 7: mood_groups["Mid (5-7)"].append(p)
-            else:        mood_groups["High (8-10)"].append(p)
+            if m <= 3:   mood_groups["Tilted"].append(p)
+            elif m <= 6: mood_groups["Neutral"].append(p)
+            else:        mood_groups["Calm"].append(p)
     mood_group_data = [{"label": lbl, "avg": round(sum(pl) / len(pl), 2), "sessions": len(pl)}
                        for lbl, pl in mood_groups.items() if pl]
 

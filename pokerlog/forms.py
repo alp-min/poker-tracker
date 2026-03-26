@@ -29,7 +29,12 @@ class EntryForm(forms.ModelForm):
         widgets = {
             "played_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "notes":     forms.Textarea(attrs={"rows": 3}),
-            "mood":      forms.Select(choices=[(i, i) for i in range(1, 11)]),
+            "mood":      forms.Select(choices=[
+                ("", "Select mood"),
+                (1, "Tilted"),
+                (5, "Neutral"),
+                (9, "Calm"),
+            ]),
             "currency":  forms.Select(attrs={"class": "currency-select"}),
         }
 
