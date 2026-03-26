@@ -25,6 +25,10 @@
         {% if field.help_text %}<div class="muted" style="margin-top:4px;">{{ field.help_text }}</div>{% endif %}
         {{ field.errors }}
       </div>
+      <div class="field">
+        <label for="{{ form.default_currency.id_for_label }}">Default currency</label>
+        {{ form.default_currency }}{{ form.default_currency.errors }}
+      </div>
     {% endfor %}
     <div style="display:flex; gap:10px; margin-top:6px;">
       <button class="btn" type="submit">Save settings</button>
