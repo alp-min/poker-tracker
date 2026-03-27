@@ -8,6 +8,9 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-k=+0bci((c%d%0nfen*&1
 
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/accounts/login/'
+
 ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
