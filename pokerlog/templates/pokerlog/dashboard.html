@@ -195,7 +195,10 @@
         <label>Venue / game</label>
         <div style="display:flex;gap:8px;align-items:center;">
           {{ form.venue }}{{ form.venue.errors }}
-          <button type="button" id="addVenueBtn" class="btn secondary btn-sm" style="white-space:nowrap;flex-shrink:0;">+ New</button>
+          <button type="button" id="addVenueBtn" class="btn secondary btn-sm" 
+          data-url="{% url 'venue_create' %}" 
+          data-csrf="{{ csrf_token }}"
+          style="white-space:nowrap;flex-shrink:0;">+ New</button>
         </div>
         <div id="newVenueRow" style="display:none;margin-top:8px;display:none;gap:8px;align-items:center;">
           <input type="text" id="newVenueName" placeholder="e.g. Nico's game" style="flex:1;" maxlength="100">
@@ -486,9 +489,11 @@ window.addEventListener('load', () => {
 
     saveBtn.disabled = true;
     try {
-      const resp = await fetch('{% url "venue_create" %}', {
+      const url = addBtn.dataset.url;
+      const csrf = addBtn.dataset.csrf;
+      const resp = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf },
         body: JSON.stringify({ name })
       });
       const data = await resp.json();
