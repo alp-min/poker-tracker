@@ -1,0 +1,31 @@
+[1mdiff --git a/pokerlog/admin.py b/pokerlog/admin.py[m
+[1mindex ed7abf3..f2b26ac 100644[m
+[1m--- a/pokerlog/admin.py[m
+[1m+++ b/pokerlog/admin.py[m
+[36m@@ -1,14 +1,20 @@[m
+ from django.contrib import admin[m
+[31m-from .models import Entry, Profile[m
+[32m+[m[32mfrom .models import Entry, Profile, Venue[m
+ [m
+ [m
+ @admin.register(Entry)[m
+ class EntryAdmin(admin.ModelAdmin):[m
+[31m-    list_display = ("user", "played_at", "format", "buy_in", "cash_out", "ev_profit")[m
+[31m-    list_filter = ("format", "played_at")[m
+[32m+[m[32m    list_display = ("user", "played_at", "format", "currency", "venue", "buy_in", "cash_out")[m
+[32m+[m[32m    list_filter = ("format", "played_at", "venue")[m
+     search_fields = ("user__username", "notes")[m
+ [m
+ [m
+ @admin.register(Profile)[m
+ class ProfileAdmin(admin.ModelAdmin):[m
+[31m-    list_display = ("user", "starting_bankroll", "max_buyin_pct", "stop_loss_buyins")[m
+\ No newline at end of file[m
+[32m+[m[32m    list_display = ("user", "starting_bankroll", "max_buyin_pct", "stop_loss_buyins")[m
+[32m+[m
+[32m+[m
+[32m+[m[32m@admin.register(Venue)[m
+[32m+[m[32mclass VenueAdmin(admin.ModelAdmin):[m
+[32m+[m[32m    list_display = ("user", "name", "created_at")[m
+[32m+[m[32m    search_fields = ("user__username", "name")[m
+\ No newline at end of file[m
