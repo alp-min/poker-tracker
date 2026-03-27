@@ -3,7 +3,6 @@ from .views import dashboard, export_csv, settings_view, duplicate_last, entry_e
 from . import views
 
 
-
 urlpatterns = [
     path("", dashboard, name="dashboard"),
     path("settings/", settings_view, name="settings"),
@@ -12,4 +11,6 @@ urlpatterns = [
     path("entries/<int:pk>/edit/", entry_edit, name="entry_edit"),
     path("entries/<int:pk>/delete/", entry_delete, name="entry_delete"),
     path("analytics/", views.analytics, name="analytics"),
+    path("venues/create/", views.venue_create, name="venue_create"),
+    path("venues/delete/<int:pk>/", views.venue_delete, name="venue_delete"),
 ]

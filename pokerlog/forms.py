@@ -1,14 +1,19 @@
 from django import forms
-from .models import Entry, Profile
+from .models import Entry, Profile, Venue
 from django.utils import timezone
 
 
 class EntryForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
         if not self.initial.get("played_at"):
             dt = timezone.localtime(timezone.now())
             self.initial["played_at"] = dt.strftime("%Y-%m-%dT%H:%M")
+        if user is not None:
+            self.fields["venue"].queryset = Venue.objects.filter(user=user)
+        self.fields["venue"].required = False
+        self.fields["venue"].empty_label = "No venue / unknown"
 
     class Meta:
         model  = Entry
@@ -16,16 +21,14 @@ class EntryForm(forms.ModelForm):
             "played_at",
             "format",
             "currency",
+            "venue",
             "buy_in",
             "cash_out",
-            "ev_profit",
             "duration_minutes",
             "table_count",
             "mood",
             "notes",
         ]
-        # rake is intentionally excluded from the form going forward.
-        # existing entries retain their rake value in profit calculations.
         widgets = {
             "played_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "notes":     forms.Textarea(attrs={"rows": 3}),
@@ -36,6 +39,15 @@ class EntryForm(forms.ModelForm):
                 (9, "Calm"),
             ]),
             "currency":  forms.Select(attrs={"class": "currency-select"}),
+        }
+
+
+class VenueForm(forms.ModelForm):
+    class Meta:
+        model  = Venue
+        fields = ["name"]
+        widgets = {
+            "name": forms.TextInput(attrs={"placeholder": "e.g. Nico's game", "maxlength": 100}),
         }
 
 

@@ -4,8 +4,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 
-from .models import Entry, Profile
-from .forms import EntryForm, ProfileForm
+from .models import Entry, Profile, Venue
+from .forms import EntryForm, ProfileForm, VenueForm
 from collections import defaultdict
 from datetime import timedelta
 from django.core.paginator import Paginator
@@ -82,7 +82,7 @@ def dashboard(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
 
     if request.method == "POST":
-        form = EntryForm(request.POST)
+        form = EntryForm(request.POST, user=request.user)
         if form.is_valid():
             entry = form.save(commit=False)
             entry.user = request.user
@@ -93,7 +93,7 @@ def dashboard(request):
         # Pre-fill currency from profile default
         if "currency" not in initial:
             initial["currency"] = profile.default_currency
-        form = EntryForm(initial=initial)
+        form = EntryForm(initial=initial, user=request.user)
 
     # FX rate for converting USD entries to GBP
     fx_rate = get_usd_to_gbp()
@@ -126,8 +126,8 @@ def dashboard(request):
         })
 
     # Bankroll curve
-    labels = []; bankroll = []; ev_line = []
-    running = 0.0; ev_running = 0.0
+    labels = []; bankroll = []
+    running = 0.0
     peak = 0.0; max_drawdown = 0.0; current_drawdown = 0.0
     peak_index = None; trough_index = None
     longest_breakeven_len = 0
@@ -142,9 +142,6 @@ def dashboard(request):
         running += p
         bankroll.append(round(running, 2))
 
-        if e.ev_profit is not None:
-            ev_running += to_gbp(float(e.ev_profit), e.currency, fx_rate)
-        ev_line.append(round(ev_running, 2))
         labels.append(e.played_at.strftime("%d %b"))
 
         if running >= peak:
@@ -275,7 +272,7 @@ def dashboard(request):
         "entries": entries, "total_profit": round(total_profit, 2),
         "total_buy_in": round(total_buy_in, 2), "total_rake": round(total_rake, 2),
         "total_cash_out": round(total_cash_out, 2),
-        "labels": labels, "bankroll": bankroll, "ev_line": ev_line, "form": form,
+        "labels": labels, "bankroll": bankroll, "form": form,
         "max_drawdown": round(max_drawdown, 2), "current_drawdown": round(current_drawdown, 2),
         "peak_date": idx_to_date(peak_index), "trough_date": idx_to_date(trough_index),
         "longest_breakeven_len": longest_breakeven_len,
@@ -300,6 +297,7 @@ def dashboard(request):
         "format_labels": format_labels, "format_profit": format_profit, "format_roi": format_roi,
         "filtered_avg_buyin": round((filtered_buyin / filtered_count) if filtered_count else 0.0, 2),
         "fx_rate": round(fx_rate, 4),
+        "venues": list(Venue.objects.filter(user=request.user).values("id", "name")),
     }
     return render(request, "pokerlog/dashboard.html", context)
 
@@ -319,7 +317,6 @@ def duplicate_last(request):
         "currency":  last.currency,
         "buy_in":    last.buy_in,
         "cash_out":  0,
-        "ev_profit": last.ev_profit or "",
         "mood":      last.mood or "",
         "notes":     "",
     }
@@ -350,12 +347,12 @@ def export_csv(request):
     entries  = Entry.objects.filter(user=request.user).order_by("played_at")
     response = HttpResponse(content_type="text/csv")
     response["Content-Disposition"] = 'attachment; filename="poker_entries.csv"'
-    response.write("played_at,format,currency,buy_in,rake,cash_out,profit,ev_profit,duration_minutes,table_count,mood,notes\n")
+    response.write("played_at,format,currency,buy_in,rake,cash_out,profit,duration_minutes,table_count,mood,notes\n")
     for e in entries:
         notes = (e.notes or "").replace('"', '""')
         response.write(
             f'{e.played_at.isoformat()},{e.format},{e.currency},{e.buy_in},{e.rake},'
-            f'{e.cash_out},{e.profit},{e.ev_profit if e.ev_profit is not None else ""},'
+            f'{e.cash_out},{e.profit},'
             f'{e.duration_minutes if e.duration_minutes is not None else ""},'
             f'{e.table_count if e.table_count is not None else ""},'
             f'{e.mood if e.mood is not None else ""},"{notes}"\n'
@@ -370,7 +367,7 @@ def export_csv(request):
 @require_http_methods(["GET", "POST"])
 def entry_edit(request, pk):
     entry = get_object_or_404(Entry, pk=pk, user=request.user)
-    form  = EntryForm(request.POST or None, instance=entry)
+    form  = EntryForm(request.POST or None, instance=entry, user=request.user)
     if request.method == "POST" and form.is_valid():
         updated = form.save(commit=False)
         updated.user = request.user
@@ -387,6 +384,41 @@ def entry_delete(request, pk):
         entry.delete()
         return redirect("dashboard")
     return render(request, "pokerlog/entry_delete.html", {"entry": entry})
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Venue AJAX endpoints
+# ─────────────────────────────────────────────────────────────────────────────
+@login_required
+def venue_create(request):
+    import json
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            name = data.get("name", "").strip()
+        except Exception:
+            name = request.POST.get("name", "").strip()
+
+        if not name:
+            from django.http import JsonResponse
+            return JsonResponse({"error": "Name required"}, status=400)
+
+        venue, created = Venue.objects.get_or_create(user=request.user, name=name)
+        from django.http import JsonResponse
+        return JsonResponse({"id": venue.id, "name": venue.name, "created": created})
+
+    from django.http import JsonResponse
+    return JsonResponse({"error": "POST required"}, status=405)
+
+
+@login_required
+def venue_delete(request, pk):
+    from django.http import JsonResponse
+    if request.method == "POST":
+        venue = get_object_or_404(Venue, pk=pk, user=request.user)
+        venue.delete()
+        return JsonResponse({"deleted": True})
+    return JsonResponse({"error": "POST required"}, status=405)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -525,23 +557,6 @@ def analytics(request):
     dist_labels = [f"£{int(k):+d}" for k in sorted_bks]
     dist_values = [dist_buckets[k] for k in sorted_bks]
     dist_colors = ["rgba(220,38,38,.55)" if k < 0 else "rgba(22,163,74,.45)" for k in sorted_bks]
-
-    # ── TIER 1: EV gap ───────────────────────────────────────────────────────
-    ev_entries = [(e, p) for e, p in zip(entries, profits) if e.ev_profit is not None]
-    ev_gap_current = None; ev_gap_labels = []; cumulative_actual = []; cumulative_ev = []
-    biggest_under_ev = 0; under_ev_streak = 0; total_ev = None; has_ev_data = bool(ev_entries)
-    if ev_entries:
-        cum_a = cum_ev = 0.0
-        for e, p in ev_entries:
-            ev_p = to_gbp(float(e.ev_profit), e.currency, fx_rate)
-            cum_a += p; cum_ev += ev_p
-            ev_gap_labels.append(e.played_at.strftime("%d %b"))
-            cumulative_actual.append(round(cum_a, 2)); cumulative_ev.append(round(cum_ev, 2))
-            if cum_a - cum_ev < 0:
-                under_ev_streak += 1; biggest_under_ev = max(biggest_under_ev, under_ev_streak)
-            else:
-                under_ev_streak = 0
-        ev_gap_current = round(cum_a - cum_ev, 2); total_ev = round(cum_ev, 2)
 
     # ── TIER 1: Day of week ───────────────────────────────────────────────────
     day_names   = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"]
@@ -694,22 +709,6 @@ def analytics(request):
     # Best table count
     best_table = max(table_efficiency, key=lambda x: x["avg_profit"]) if table_efficiency else None
 
-    # ── TIER 3: EV Realisation ────────────────────────────────────────────────
-    ev_realisation = None; ev_realisation_label = None; ev_realisation_color = "muted"
-    if ev_entries and total_ev and total_ev != 0:
-        total_actual_ev_sum = sum(p for _, p in ev_entries)
-        ev_realisation = round((total_actual_ev_sum / total_ev) * 100, 1)
-        if ev_realisation >= 110:
-            ev_realisation_label, ev_realisation_color = "Running hot 🔥", "pos"
-        elif ev_realisation >= 95:
-            ev_realisation_label, ev_realisation_color = "Slightly above EV", "pos"
-        elif ev_realisation >= 85:
-            ev_realisation_label, ev_realisation_color = "Slightly below EV", "warn"
-        elif ev_realisation >= 70:
-            ev_realisation_label, ev_realisation_color = "Running cold ❄️", "neg"
-        else:
-            ev_realisation_label, ev_realisation_color = "Significant variance downswing", "neg"
-
     # ── TIER 3: Downswings ────────────────────────────────────────────────────
     avg_bi_ds = total_buy_in / n if n else 1
     threshold_ds = avg_bi_ds * 5
@@ -839,6 +838,39 @@ def analytics(request):
     days_needing_data  = [day_names[i] for i in range(7) if len(day_buckets[i]) < MIN_SESSIONS_FOR_RECOMMENDATION and len(day_buckets[i]) > 0]
     hours_needing_data = [f"{h:02d}:00" for h in active_hours if len(hour_buckets[h]) < MIN_SESSIONS_FOR_RECOMMENDATION]
 
+    # ── Venue analytics ───────────────────────────────────────────────────────
+    venue_buckets = defaultdict(lambda: {"profits": [], "buy_ins": [], "minutes": []})
+    for e, p in zip(entries, profits):
+        if e.venue_id:
+            key = e.venue.name
+            venue_buckets[key]["profits"].append(p)
+            venue_buckets[key]["buy_ins"].append(to_gbp_val(e.buy_in, e))
+            venue_buckets[key]["minutes"].append(int(e.duration_minutes or 0))
+
+    venue_stats = []
+    for vname, data in sorted(venue_buckets.items()):
+        pl      = data["profits"]
+        bil     = data["buy_ins"]
+        mins    = data["minutes"]
+        total_p = sum(pl)
+        total_b = sum(bil)
+        hours   = sum(mins) / 60 if sum(mins) else 0
+        roi     = round(total_p / total_b * 100, 1) if total_b else 0
+        winrate = round(sum(1 for p in pl if p > 0) / len(pl) * 100, 1)
+        hourly  = round(total_p / hours, 2) if hours else None
+        avg_p   = round(total_p / len(pl), 2)
+        venue_stats.append({
+            "name":     vname,
+            "sessions": len(pl),
+            "profit":   round(total_p, 2),
+            "roi":      roi,
+            "winrate":  winrate,
+            "hourly":   hourly,
+            "avg_profit": avg_p,
+        })
+    venue_stats.sort(key=lambda x: x["profit"], reverse=True)
+    has_venue_data = bool(venue_stats)
+
     context = {
         "total_sessions": total_sessions, "total_profit": round(total_profit, 2),
         "overall_roi": round(overall_roi, 2),
@@ -866,16 +898,11 @@ def analytics(request):
         "days_needing_data": days_needing_data, "hours_needing_data": hours_needing_data,
         "min_sessions_rec": MIN_SESSIONS_FOR_RECOMMENDATION,
         # EV & Variance
-        "has_ev_data": has_ev_data, "ev_gap_labels": ev_gap_labels,
-        "cumulative_actual": cumulative_actual, "cumulative_ev": cumulative_ev,
-        "ev_gap_current": ev_gap_current, "biggest_under_ev": biggest_under_ev, "total_ev": total_ev,
         "std_dev": round(std_dev, 2), "variance": round(variance, 2),
         "mean_profit": round(mean_profit, 2),
         "volatility_rating": volatility_rating, "volatility_color": volatility_color,
         "breakeven_sessions": breakeven_sessions, "ror_pct": ror_pct,
         "bankroll_for_ror": round(bankroll_for_ror, 2) if bankroll_for_ror else None,
-        "ev_realisation": ev_realisation, "ev_realisation_label": ev_realisation_label,
-        "ev_realisation_color": ev_realisation_color,
         "sharpe_ratio": sharpe_ratio, "sharpe_label": sharpe_label, "sharpe_color": sharpe_color,
         "ci_lower": ci_lower, "ci_upper": ci_upper, "ci_note": ci_note, "ci_color": ci_color,
         "has_rolling_roi": has_rolling_roi,
@@ -892,5 +919,8 @@ def analytics(request):
         "monthly_table": monthly_table,
         # FX
         "fx_rate": round(fx_rate, 4),
+        # Venues
+        "venue_stats": venue_stats,
+        "has_venue_data": has_venue_data,
     }
     return render(request, "pokerlog/analytics.html", context)

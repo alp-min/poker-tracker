@@ -47,7 +47,7 @@
 <div class="tab-bar">
   <button class="tab-btn active" onclick="switchTab('overview',   this)">Overview</button>
   <button class="tab-btn"        onclick="switchTab('sessions',   this)">Session Analysis</button>
-  <button class="tab-btn"        onclick="switchTab('ev',         this)">EV &amp; Variance</button>
+  <button class="tab-btn"        onclick="switchTab('ev',         this)">Variance</button>
   <button class="tab-btn"        onclick="switchTab('streaks',    this)">Streaks &amp; Mood</button>
 </div>
 
@@ -162,6 +162,41 @@
             <td class="num {% if row.roi >= 0 %}pos{% else %}neg{% endif %}">{{ row.roi }}%</td>
             <td class="num">£{{ row.bankroll }}</td>
             <td class="num">{% if row.growth is not None %}<span class="{% if row.growth >= 0 %}pos{% else %}neg{% endif %}">{{ row.growth }}%</span>{% else %}<span class="muted">—</span>{% endif %}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Venue / game analytics -->
+  {% if has_venue_data %}
+  <div class="card">
+    <h3>Venue &amp; game breakdown</h3>
+    <div class="table-wrap">
+      <table class="mini-table">
+        <thead>
+          <tr>
+            <th>Venue</th>
+            <th class="num">Sessions</th>
+            <th class="num">Profit</th>
+            <th class="num">ROI</th>
+            <th class="num">Win Rate</th>
+            <th class="num">Avg/Session</th>
+            <th class="num">£/hr</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for v in venue_stats %}
+          <tr>
+            <td><strong>{{ v.name }}</strong></td>
+            <td class="num">{{ v.sessions }}</td>
+            <td class="num {% if v.profit >= 0 %}pos{% else %}neg{% endif %}">£{{ v.profit }}</td>
+            <td class="num {% if v.roi >= 0 %}pos{% else %}neg{% endif %}">{{ v.roi }}%</td>
+            <td class="num">{{ v.winrate }}%</td>
+            <td class="num {% if v.avg_profit >= 0 %}pos{% else %}neg{% endif %}">£{{ v.avg_profit }}</td>
+            <td class="num">{% if v.hourly is not None %}<span class="{% if v.hourly >= 0 %}pos{% else %}neg{% endif %}">£{{ v.hourly }}</span>{% else %}<span class="muted">—</span>{% endif %}</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -414,32 +449,6 @@
     {% endif %}
   </div>
 
-  <!-- EV vs Actual -->
-  <div class="card">
-    <h3>EV vs actual</h3>
-    {% if has_ev_data %}
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:16px;">
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
-          <div class="muted" style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:4px;">Current gap</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:1.1rem;" class="{% if ev_gap_current >= 0 %}pos{% else %}neg{% endif %}">{% if ev_gap_current >= 0 %}+{% endif %}£{{ ev_gap_current }}</div>
-        </div>
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
-          <div class="muted" style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:4px;">EV Realisation</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:1.1rem;" class="{{ ev_realisation_color }}">
-            {% if ev_realisation is not None %}{{ ev_realisation }}%{% else %}—{% endif %}
-          </div>
-          {% if ev_realisation_label %}<div style="font-size:0.72rem;margin-top:2px;" class="{{ ev_realisation_color }}">{{ ev_realisation_label }}</div>{% endif %}
-        </div>
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;">
-          <div class="muted" style="font-size:0.67rem;font-weight:700;text-transform:uppercase;letter-spacing:0.09em;margin-bottom:4px;">Longest under-EV run</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:1.1rem;">{{ biggest_under_ev }} sessions</div>
-        </div>
-      </div>
-      <div class="chart-wrap" style="height:220px;"><canvas id="evChart"></canvas></div>
-    {% else %}
-      <p class="muted">No EV profit data logged yet. Add EV profit to sessions to unlock this section.</p>
-    {% endif %}
-  </div>
 
 </div><!-- /tab-ev -->
 
@@ -681,25 +690,6 @@ window.addEventListener('load', () => {
   });
   {% endif %}
 
-  // ── EV chart ───────────────────────────────────────────────────────────────
-  {% if has_ev_data %}
-  new Chart(document.getElementById('evChart').getContext('2d'), {
-    type:'line',
-    data:{
-      labels:{{ ev_gap_labels|safe }},
-      datasets:[
-        { label:'Actual', data:{{ cumulative_actual|safe }}, borderColor:'#3b82f6', tension:0.25, borderWidth:2, pointRadius:0, pointHoverRadius:3 },
-        { label:'EV',     data:{{ cumulative_ev|safe }},     borderColor:'#22c55e', borderDash:[5,4], tension:0.25, borderWidth:1.5, pointRadius:0, pointHoverRadius:3 },
-      ]
-    },
-    options:{
-      responsive:true, maintainAspectRatio:false,
-      interaction:{ mode:'index', intersect:false },
-      plugins:{ legend:{ position:'top', labels:{color:t.text,font:sans,boxWidth:10,usePointStyle:true,padding:12} }, tooltip:{...tip, callbacks:{ label: c => ` ${c.dataset.label}: £${Number(c.parsed.y).toFixed(2)}` }} },
-      scales:{ y:scaleY, x:scaleX }
-    }
-  });
-  {% endif %}
 
   // ── Mood chart ─────────────────────────────────────────────────────────────
   {% if mood_labels %}

@@ -32,6 +32,20 @@ def create_profile(sender, instance, created, **kwargs):
         Profile.objects.create(user=instance)
 
 
+class Venue(models.Model):
+    """A named game/venue preset — e.g. 'Nico's game', 'Monday Society'."""
+    user       = models.ForeignKey(User, on_delete=models.CASCADE, related_name="venues")
+    name       = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["name"]
+        unique_together = [("user", "name")]
+
+    def __str__(self):
+        return self.name
+
+
 class Entry(models.Model):
     FORMAT_CHOICES = [
         ("MTT", "MTT"),
@@ -44,15 +58,14 @@ class Entry(models.Model):
     played_at  = models.DateTimeField()
     format     = models.CharField(max_length=10, choices=FORMAT_CHOICES, default="MTT")
     currency   = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default="GBP")
+    venue      = models.ForeignKey(
+        Venue, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name="entries"
+    )
 
     buy_in   = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     rake     = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     cash_out = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
-    ev_profit = models.DecimalField(
-        max_digits=10, decimal_places=2, null=True, blank=True,
-        help_text="Expected profit for this session"
-    )
 
     duration_minutes = models.PositiveIntegerField(null=True, blank=True)
     table_count      = models.PositiveIntegerField(null=True, blank=True)

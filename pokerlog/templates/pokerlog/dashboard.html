@@ -188,10 +188,23 @@
         <label for="{{ form.cash_out.id_for_label }}">Cash-out</label>
         {{ form.cash_out }}{{ form.cash_out.errors }}
       </div>
+      <div class="field"></div>
+    </div>
+    <div class="row">
       <div class="field">
-        <label for="{{ form.ev_profit.id_for_label }}">EV profit</label>
-        {{ form.ev_profit }}{{ form.ev_profit.errors }}
+        <label>Venue / game</label>
+        <div style="display:flex;gap:8px;align-items:center;">
+          {{ form.venue }}{{ form.venue.errors }}
+          <button type="button" id="addVenueBtn" class="btn secondary btn-sm" style="white-space:nowrap;flex-shrink:0;">+ New</button>
+        </div>
+        <div id="newVenueRow" style="display:none;margin-top:8px;display:none;gap:8px;align-items:center;">
+          <input type="text" id="newVenueName" placeholder="e.g. Nico's game" style="flex:1;" maxlength="100">
+          <button type="button" id="saveVenueBtn" class="btn btn-sm" style="flex-shrink:0;">Save</button>
+          <button type="button" id="cancelVenueBtn" class="btn secondary btn-sm" style="flex-shrink:0;">Cancel</button>
+        </div>
+        <div id="venueMsg" style="font-size:0.8rem;margin-top:4px;"></div>
       </div>
+      <div class="field"></div>
     </div>
     <div class="row">
       <div class="field">
@@ -443,5 +456,63 @@ window.addEventListener('load', () => {
     }
   });
 });
+
+// ── Venue inline create ──────────────────────────────────────────────────────
+(function() {
+  const addBtn    = document.getElementById('addVenueBtn');
+  const newRow    = document.getElementById('newVenueRow');
+  const nameInput = document.getElementById('newVenueName');
+  const saveBtn   = document.getElementById('saveVenueBtn');
+  const cancelBtn = document.getElementById('cancelVenueBtn');
+  const msg       = document.getElementById('venueMsg');
+  const select    = document.getElementById('{{ form.venue.id_for_label }}');
+
+  if (!addBtn) return;
+
+  addBtn.addEventListener('click', () => {
+    newRow.style.display = 'flex';
+    nameInput.focus();
+  });
+
+  cancelBtn.addEventListener('click', () => {
+    newRow.style.display = 'none';
+    nameInput.value = '';
+    msg.textContent = '';
+  });
+
+  saveBtn.addEventListener('click', async () => {
+    const name = nameInput.value.trim();
+    if (!name) { msg.style.color = 'var(--red-soft)'; msg.textContent = 'Enter a name.'; return; }
+
+    saveBtn.disabled = true;
+    try {
+      const resp = await fetch('{% url "venue_create" %}', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+        body: JSON.stringify({ name })
+      });
+      const data = await resp.json();
+      if (data.error) { msg.style.color = 'var(--red-soft)'; msg.textContent = data.error; return; }
+
+      // Add option to select and pick it
+      const opt = new Option(data.name, data.id, true, true);
+      select.appendChild(opt);
+      select.value = data.id;
+
+      newRow.style.display = 'none';
+      nameInput.value = '';
+      msg.style.color = 'var(--green)';
+      msg.textContent = `"${data.name}" ${data.created ? 'created' : 'already exists — selected'}.`;
+      setTimeout(() => msg.textContent = '', 3000);
+    } catch(e) {
+      msg.style.color = 'var(--red-soft)';
+      msg.textContent = 'Error saving venue.';
+    } finally {
+      saveBtn.disabled = false;
+    }
+  });
+
+  nameInput.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); saveBtn.click(); } });
+})();
 </script>
 {% endblock %}
