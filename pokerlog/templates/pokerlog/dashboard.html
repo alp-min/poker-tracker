@@ -188,43 +188,38 @@
         <label for="{{ form.cash_out.id_for_label }}">Cash-out</label>
         {{ form.cash_out }}{{ form.cash_out.errors }}
       </div>
-      <div class="field"></div>
+      <div class="field">
+        <label for="{{ form.duration_minutes.id_for_label }}">Duration (mins)</label>
+        {{ form.duration_minutes }}{{ form.duration_minutes.errors }}
+      </div>
     </div>
     <div class="row">
       <div class="field">
+        <label for="{{ form.mood.id_for_label }}">Mood</label>
+        {{ form.mood }}{{ form.mood.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.table_count.id_for_label }}">Tables</label>
+        {{ form.table_count }}{{ form.table_count.errors }}
+      </div>
+    </div>
+    <div class="row">
+      <div class="field" style="grid-column:1/-1;">
         <label>Venue / game</label>
         <div style="display:flex;gap:8px;align-items:center;">
           {{ form.venue }}{{ form.venue.errors }}
-          <button type="button" id="addVenueBtn" class="btn secondary btn-sm" 
-          data-url="{% url 'venue_create' %}" 
-          data-csrf="{{ csrf_token }}"
-          style="white-space:nowrap;flex-shrink:0;">+ New</button>
+          <button type="button" id="addVenueBtn" class="btn secondary btn-sm"
+            data-url="{% url 'venue_create' %}"
+            data-csrf="{{ csrf_token }}"
+            style="white-space:nowrap;flex-shrink:0;">+ New</button>
         </div>
-        <div id="newVenueRow" style="display:none;margin-top:8px;display:none;gap:8px;align-items:center;">
+        <div id="newVenueRow" style="display:none;margin-top:8px;gap:8px;align-items:center;">
           <input type="text" id="newVenueName" placeholder="e.g. Nico's game" style="flex:1;" maxlength="100">
           <button type="button" id="saveVenueBtn" class="btn btn-sm" style="flex-shrink:0;">Save</button>
           <button type="button" id="cancelVenueBtn" class="btn secondary btn-sm" style="flex-shrink:0;">Cancel</button>
         </div>
         <div id="venueMsg" style="font-size:0.8rem;margin-top:4px;"></div>
       </div>
-      <div class="field"></div>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label for="{{ form.duration_minutes.id_for_label }}">Duration (mins)</label>
-        {{ form.duration_minutes }}{{ form.duration_minutes.errors }}
-      </div>
-      <div class="field">
-        <label for="{{ form.mood.id_for_label }}">Mood</label>
-        {{ form.mood }}{{ form.mood.errors }}
-      </div>
-    </div>
-    <div class="row">
-      <div class="field">
-        <label for="{{ form.table_count.id_for_label }}">Tables</label>
-        {{ form.table_count }}{{ form.table_count.errors }}
-      </div>
-      <div class="field"></div>
     </div>
     <div class="field" style="margin-bottom:14px;">
       <label for="{{ form.notes.id_for_label }}">Notes</label>
