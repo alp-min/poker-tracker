@@ -416,7 +416,6 @@ window.addEventListener('load', () => {
       labels: {{ labels|safe }},
       datasets: [
         { label: 'Actual Profit', data: {{ bankroll|safe }}, borderColor: '#3b82f6', backgroundColor: 'rgba(59,130,246,.06)', fill: true, tension: 0.25, borderWidth: 2, pointRadius: 0, pointHoverRadius: 4 },
-        { label: 'EV Profit',     data: {{ ev_line|safe }},  borderColor: '#c9963a', borderDash: [5,4], tension: 0.25, borderWidth: 1.5, pointRadius: 0, pointHoverRadius: 4 },
       ],
     },
     options: {
