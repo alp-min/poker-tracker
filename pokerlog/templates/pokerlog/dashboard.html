@@ -468,7 +468,7 @@ window.addEventListener('load', () => {
   const saveBtn   = document.getElementById('saveVenueBtn');
   const cancelBtn = document.getElementById('cancelVenueBtn');
   const msg       = document.getElementById('venueMsg');
-  const select    = document.getElementById('{{ form.venue.id_for_label }}');
+  const select    = document.querySelector('select[name="venue"]');
 
   if (!addBtn) return;
 
@@ -489,7 +489,7 @@ window.addEventListener('load', () => {
 
     saveBtn.disabled = true;
     try {
-      const url = addBtn.dataset.url;
+      const url  = addBtn.dataset.url;
       const csrf = addBtn.dataset.csrf;
       const resp = await fetch(url, {
         method: 'POST',
@@ -499,19 +499,18 @@ window.addEventListener('load', () => {
       const data = await resp.json();
       if (data.error) { msg.style.color = 'var(--red-soft)'; msg.textContent = data.error; return; }
 
-      // Add option to select and pick it
       const opt = new Option(data.name, data.id, true, true);
-      select.appendChild(opt);
-      select.value = data.id;
+      if (select) { select.appendChild(opt); select.value = data.id; }
 
       newRow.style.display = 'none';
       nameInput.value = '';
       msg.style.color = 'var(--green)';
-      msg.textContent = `"${data.name}" ${data.created ? 'created' : 'already exists — selected'}.`;
+      msg.textContent = '"' + data.name + '" ' + (data.created ? 'created.' : 'already exists — selected.');
       setTimeout(() => msg.textContent = '', 3000);
     } catch(e) {
       msg.style.color = 'var(--red-soft)';
-      msg.textContent = 'Error saving venue.';
+      msg.textContent = 'Error saving venue. Try refreshing.';
+      console.error(e);
     } finally {
       saveBtn.disabled = false;
     }
