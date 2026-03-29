@@ -349,9 +349,9 @@
           <tr>
             <td data-label="Date">{{ e.played_at|date:"d M Y H:i" }}</td>
             <td data-label="Format"><span class="fmt-badge {{ e.format }}">{{ e.format }}</span></td>
-            <td data-label="Buy-in" class="num">£{{ e.buy_in }}</td>
-            <td data-label="Cash-out" class="num">£{{ e.cash_out }}</td>
-            <td data-label="Profit" class="num {% if e.profit >= 0 %}pos{% else %}neg{% endif %}">£{{ e.profit }}</td>
+            <td data-label="Buy-in" class="num">{% if e.currency == "USD" %}${% else %}£{% endif %}{{ e.buy_in }}</td>
+            <td data-label="Cash-out" class="num">{% if e.currency == "USD" %}${% else %}£{% endif %}{{ e.cash_out }}</td>
+            <td data-label="Profit" class="num {% if e.profit >= 0 %}pos{% else %}neg{% endif %}">{% if e.currency == "USD" %}${% else %}£{% endif %}{{ e.profit }}</td>
             <td class="actions" data-label="Actions">
               <div class="action-buttons">
                 <a class="btn btn-sm secondary" href="{% url 'entry_edit' e.pk %}">Edit</a>
