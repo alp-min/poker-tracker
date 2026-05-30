@@ -581,8 +581,10 @@ def analytics(request):
     for p in profits:
         running += p; cumulative_profits.append(round(running, 2))
 
+    import json as _json
     def moving_avg(data, window):
-        return [None if i < window - 1 else round(sum(data[i-window+1:i+1]) / window, 2) for i in range(len(data))]
+        result = [None if i < window - 1 else round(sum(data[i-window+1:i+1]) / window, 2) for i in range(len(data))]
+        return _json.dumps(result)
 
     ma_labels = [e.played_at.strftime("%d %b") for e in entries]
     ma5  = moving_avg(cumulative_profits, 5)

@@ -589,8 +589,8 @@ window.addEventListener('load', () => {
       labels: {{ ma_labels|safe }},
       datasets:[
         { label:'Actual', data:{{ cumulative_profits|safe }}, borderColor:'#3b82f6', backgroundColor:'rgba(59,130,246,.06)', fill:true, tension:0.25, borderWidth:2, pointRadius:0, pointHoverRadius:4 },
-        { label:'5-MA',   data:{{ ma5|safe }},  borderColor:'#c9963a', borderDash:[5,4], tension:0.3, borderWidth:1.5, pointRadius:0, pointHoverRadius:3 },
-        { label:'10-MA',  data:{{ ma10|safe }}, borderColor:'#a855f7', borderDash:[3,3], tension:0.3, borderWidth:1.5, pointRadius:0, pointHoverRadius:3 },
+        { label:'5-MA',   data:{{ ma5 }},  borderColor:'#c9963a', borderDash:[5,4], tension:0.3, borderWidth:1.5, pointRadius:0, pointHoverRadius:3 },
+        { label:'10-MA',  data:{{ ma10 }}, borderColor:'#a855f7', borderDash:[3,3], tension:0.3, borderWidth:1.5, pointRadius:0, pointHoverRadius:3 },
       ]
     },
     options:{
