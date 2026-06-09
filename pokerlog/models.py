@@ -67,11 +67,19 @@ class Entry(models.Model):
     rake     = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     cash_out = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
+    title            = models.CharField(max_length=100, blank=True, default="")
     duration_minutes = models.PositiveIntegerField(null=True, blank=True)
     table_count      = models.PositiveIntegerField(null=True, blank=True)
     mood             = models.IntegerField(null=True, blank=True)
     notes            = models.TextField(blank=True, default="")
     created_at       = models.DateTimeField(auto_now_add=True)
+
+    def save(self, *args, **kwargs):
+        # Only auto-fill title on new entries where the user left it blank.
+        # Never touches existing entries.
+        if not self.title and self.played_at:
+            self.title = self.played_at.strftime("%d %B %Y")
+        super().save(*args, **kwargs)
 
     @property
     def total_cost(self):

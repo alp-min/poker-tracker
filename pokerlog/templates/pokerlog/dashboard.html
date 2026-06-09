@@ -164,6 +164,12 @@
   <form method="post">
     {% csrf_token %}
     <div class="row">
+      <div class="field" style="grid-column:1/-1;">
+        <label for="{{ form.title.id_for_label }}">Session title <span class="muted" style="font-weight:400;">(optional — defaults to date)</span></label>
+        {{ form.title }}{{ form.title.errors }}
+      </div>
+    </div>
+    <div class="row">
       <div class="field">
         <label for="{{ form.played_at.id_for_label }}">Played at</label>
         {{ form.played_at }}{{ form.played_at.errors }}
@@ -336,6 +342,7 @@
     <table class="entries-table">
       <thead>
         <tr>
+          <th>Title</th>
           <th>Date</th>
           <th>Format</th>
           <th class="num">Buy-in</th>
@@ -347,6 +354,7 @@
       <tbody>
         {% for e in context_entries %}
           <tr>
+            <td data-label="Title">{{ e.title|default:e.played_at|date:"d M Y" }}</td>
             <td data-label="Date">{{ e.played_at|date:"d M Y H:i" }}</td>
             <td data-label="Format"><span class="fmt-badge {{ e.format }}">{{ e.format }}</span></td>
             <td data-label="Buy-in" class="num">{% if e.currency == "USD" %}${% else %}£{% endif %}{{ e.buy_in }}</td>
@@ -364,7 +372,7 @@
             </td>
           </tr>
         {% empty %}
-          <tr><td colspan="6" class="muted" style="text-align:center; padding:24px;">No sessions yet.</td></tr>
+          <tr><td colspan="7" class="muted" style="text-align:center; padding:24px;">No sessions yet.</td></tr>
         {% endfor %}
       </tbody>
     </table>

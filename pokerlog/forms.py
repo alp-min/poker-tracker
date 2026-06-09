@@ -18,6 +18,7 @@ class EntryForm(forms.ModelForm):
     class Meta:
         model  = Entry
         fields = [
+            "title",
             "played_at",
             "format",
             "currency",
@@ -30,6 +31,7 @@ class EntryForm(forms.ModelForm):
             "notes",
         ]
         widgets = {
+            "title":     forms.TextInput(attrs={"placeholder": "e.g. Monday night tourney (optional)"}),
             "played_at": forms.DateTimeInput(attrs={"type": "datetime-local"}),
             "notes":     forms.Textarea(attrs={"rows": 3}),
             "mood":      forms.Select(choices=[
