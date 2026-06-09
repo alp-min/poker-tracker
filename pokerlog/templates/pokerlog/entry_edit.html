@@ -10,6 +10,14 @@
     {% csrf_token %}
 
     <div class="row">
+      <div class="field" style="grid-column:1/-1;">
+        <label for="{{ form.title.id_for_label }}">Session title <span class="muted" style="font-weight:400;">(optional — defaults to date)</span></label>
+        {{ form.title }}
+        {{ form.title.errors }}
+      </div>
+    </div>
+
+    <div class="row">
       <div class="field">
         <label for="{{ form.played_at.id_for_label }}">Played at</label>
         {{ form.played_at }}
