@@ -75,11 +75,15 @@ class Entry(models.Model):
     created_at       = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
-        # Only auto-fill title on new entries where the user left it blank.
-        # Never touches existing entries.
+        # Always auto-fill title if blank — covers new entries and edits where title is cleared
         if not self.title and self.played_at:
             self.title = self.played_at.strftime("%d %B %Y")
         super().save(*args, **kwargs)
+
+    @property
+    def display_title(self):
+        """Returns title if set, otherwise falls back to formatted date."""
+        return self.title if self.title else self.played_at.strftime("%d %B %Y")
 
     @property
     def total_cost(self):

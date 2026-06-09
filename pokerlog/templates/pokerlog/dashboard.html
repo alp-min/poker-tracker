@@ -354,7 +354,7 @@
       <tbody>
         {% for e in context_entries %}
           <tr>
-            <td data-label="Title">{{ e.title|default:e.played_at|date:"d M Y" }}</td>
+            <td data-label="Title">{{ e.display_title }}</td>
             <td data-label="Date">{{ e.played_at|date:"d M Y H:i" }}</td>
             <td data-label="Format"><span class="fmt-badge {{ e.format }}">{{ e.format }}</span></td>
             <td data-label="Buy-in" class="num">{% if e.currency == "USD" %}${% else %}£{% endif %}{{ e.buy_in }}</td>
